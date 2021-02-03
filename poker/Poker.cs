@@ -49,6 +49,11 @@ public static class Poker
             origin: hand);
     }   
 
+    public static bool HasPoorAce(this Hand hand) {
+        var ranks = hand.Select( c => c.Rank).OrderBy( r => r);
+        return ranks.First() == Rank.Ace && ranks.Last() == Rank.Two;
+    } 
+
     public static bool IsStraight(this Hand hand) {
         var x  = hand.Select( card => card.Rank).OrderBy( rank => rank).Distinct(); 
         return x.Count() != 5 ? 
@@ -57,7 +62,7 @@ public static class Poker
             x.Last() - x.First() == 4 ? 
                 true 
                 : 
-                x.First() == Rank.Ace && x.Last() == Rank.Two ? 
+                hand.HasPoorAce() ? 
                     x.Last() - x.Skip(1).First() == 3 ? 
                         true 
                         : 
@@ -86,8 +91,8 @@ public static class Poker
         if (matches.Any())
         {
             result = matches
-                .GroupBy( hand => hand.ToHand(), HandComparer.Default)
-                .OrderBy( grp => grp.Key, HandComparer.Default)
+                .GroupBy( hand => hand.ToHand(), HandComparer.Straight)
+                .OrderBy( grp => grp.Key, HandComparer.Straight)
                 .First()
                 .ToArray();
             return true; 
@@ -281,10 +286,9 @@ public class HandComparer : IComparer<Hand>, IEqualityComparer<Hand>
 
     private IEnumerable<Rank> OrderByRank( Hand hand) =>
         this.compareStraight && hand.HasPoorAce() ? 
-
-        hand.Select( c => c.Rank).OrderBy( r => r);
-    
-         hand.Select( c => c.Rank).OrderBy(r => r); 
+            hand.Select( c => c.Rank).OrderBy( r => r).Skip(1).Append(Rank.PoorAce)
+            :
+            hand.Select( c => c.Rank).OrderBy(r => r); 
 
     public int Compare(Hand x, Hand y) {
 
@@ -305,6 +309,7 @@ public class HandComparer : IComparer<Hand>, IEqualityComparer<Hand>
         .Aggregate( 13, (accu, cur) => accu ^ cur);
 
     public static HandComparer Default => @default.Value;
+    public static HandComparer Straight => straight.Value;
 
     private HandComparer() {}
 }
