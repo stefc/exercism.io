@@ -12,8 +12,9 @@ public static class Poker
 
     public static IEnumerable<string> BestHands(IEnumerable<string> hands)
     {
-
-        if (hands.TryStraight(out var straight)) {
+        if (hands.TryFlush(out var flush)) {
+            return flush;
+        } else if (hands.TryStraight(out var straight)) {
             return straight;
         } else if (hands.TryThreeOfAKind(out var threeOfaKind)) {
             return threeOfaKind;
@@ -37,11 +38,6 @@ public static class Poker
     public static (Hand sameRank, Hand kickers, string origin) Split(this string hand, int count = 2) 
     {
         //  "4S 2H 6S 2D JH" -> "2H 2D" sameRank, "4S 6S JH" kickers  origin = .. 
-
-        //   4 - 4S
-        //   2 - 2H, 2D
-        //   6 - 6S 
-        //   J - JH
         var x = hand.ToHand().GroupBy( card => card.Rank);
         return (
             sameRank: x.Where( grp => grp.Count() == count).SelectMany( grp => grp).ToArray(), 
@@ -53,6 +49,9 @@ public static class Poker
         var ranks = hand.Select( c => c.Rank).OrderBy( r => r);
         return ranks.First() == Rank.Ace && ranks.Last() == Rank.Two;
     } 
+
+    public static bool IsFlush(this Hand hand) 
+        => hand.Select( card => card.Suit).Distinct().Count() == 1; 
 
     public static bool IsStraight(this Hand hand) {
         var x  = hand.Select( card => card.Rank).OrderBy( rank => rank).Distinct(); 
@@ -81,6 +80,25 @@ public static class Poker
         .OrderBy( suit => suit)
         .FirstOrDefault();
 
+    public static bool TryFlush(this IEnumerable<string> hands, out IEnumerable<string> result) {
+
+        result = Enumerable.Empty<string>();
+
+        var matches = hands
+            .Where( hand => hand.ToHand().IsFlush());
+
+        if (matches.Any())
+        {
+            result = matches
+                .GroupBy( hand => hand.ToHand(), HandComparer.Default)
+                .OrderBy( grp => grp.Key, HandComparer.Default)
+                .First()
+                .ToArray();
+            return true; 
+        } 
+
+        return false;
+    }
     public static bool TryStraight(this IEnumerable<string> hands, out IEnumerable<string> result) {
 
         result = Enumerable.Empty<string>();

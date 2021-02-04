@@ -166,7 +166,7 @@ public class PokerTests
         Assert.Equal(expected, actual);
     }
 
-    [Fact(Skip = "Remove this Skip property to run this test")]
+    [Fact]
     public void Flush_beats_a_straight()
     {
         var hands = new[] { "4C 6H 7D 8D 5H", "2S 4S 5S 6S 7S" };
@@ -175,7 +175,7 @@ public class PokerTests
         Assert.Equal(expected, actual);
     }
 
-    [Fact(Skip = "Remove this Skip property to run this test")]
+    [Fact]
     public void Both_hands_have_a_flush_tie_goes_to_high_card_down_to_the_last_one_if_necessary()
     {
         var hands = new[] { "4H 7H 8H 9H 6H", "2S 4S 5S 6S 7S" };
