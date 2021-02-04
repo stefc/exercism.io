@@ -13,7 +13,9 @@ public static class Poker
 
     public static IEnumerable<string> BestHands(IEnumerable<string> hands)
     {
-        if (hands.TryFullhouse(out var fullhouse)) {
+        if (hands.TryQuad(out var quad)) {
+            return quad;
+        } else if (hands.TryFullhouse(out var fullhouse)) {
             return fullhouse;
         } else if (hands.TryFlush(out var flush)) {
             return flush;
@@ -49,7 +51,11 @@ public static class Poker
         => hand.Select( card => card.Suit).Distinct().Count() == 1; 
 
     public static bool IsFullhouse(this Hand hand) 
-        => hand.GroupBy( card => card.Rank).Count() == 2; 
+        => hand.GroupBy( card => card.Rank).Count() == 2 && (hand.GroupBy( card => card.Rank).Any( grp => grp.Count() == 3)); 
+
+    public static bool IsQuad(this Hand hand) 
+        => hand.GroupBy( card => card.Rank).Any( grp => grp.Count() == 4); 
+
 
     public static bool IsStraight(this Hand hand) {
         var x  = hand.Select( card => card.Rank).OrderBy( rank => rank).Distinct(); 
@@ -78,6 +84,30 @@ public static class Poker
         .OrderBy( suit => suit)
         .FirstOrDefault();
 
+    public static bool TryQuad(this IEnumerable<string> hands, out IEnumerable<string> result) {
+
+        result = Enumerable.Empty<string>();
+
+        var matches = hands
+            .Where( hand => hand.ToHand().IsQuad())
+            .Select( hand => hand.Split(4));
+
+        if (matches.Any())
+        {
+            result = matches
+                .GroupBy( match => match.sameRank, HandComparer.Default)
+                .OrderBy( grp => grp.Key, HandComparer.Default).First()
+                .GroupBy( match => match.kickers, HandComparer.Default)
+                .OrderBy( grp => grp.Key, HandComparer.Default).First()
+                .Select( match => match.origin)
+                .ToArray();
+
+            return true; 
+        } 
+
+        return false;
+    }
+
     public static bool TryFullhouse(this IEnumerable<string> hands, out IEnumerable<string> result) {
 
         result = Enumerable.Empty<string>();
@@ -101,6 +131,7 @@ public static class Poker
 
         return false;
     }
+    
     public static bool TryFlush(this IEnumerable<string> hands, out IEnumerable<string> result) {
 
         result = Enumerable.Empty<string>();

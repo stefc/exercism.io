@@ -211,7 +211,7 @@ public class PokerTests
         Assert.Equal(expected, actual);
     }
 
-    [Fact(Skip = "Remove this Skip property to run this test")]
+    [Fact]
     public void Four_of_a_kind_beats_a_full_house()
     {
         var hands = new[] { "4S 5H 4D 5D 4H", "3S 3H 2S 3D 3C" };
@@ -220,7 +220,7 @@ public class PokerTests
         Assert.Equal(expected, actual);
     }
 
-    [Fact(Skip = "Remove this Skip property to run this test")]
+    [Fact]
     public void Both_hands_have_four_of_a_kind_tie_goes_to_high_quad()
     {
         var hands = new[] { "2S 2H 2C 8D 2D", "4S 5H 5S 5D 5C" };
@@ -229,7 +229,7 @@ public class PokerTests
         Assert.Equal(expected, actual);
     }
 
-    [Fact(Skip = "Remove this Skip property to run this test")]
+    [Fact]
     public void With_multiple_decks_both_hands_with_identical_four_of_a_kind_tie_determined_by_kicker()
     {
         var hands = new[] { "3S 3H 2S 3D 3C", "3S 3H 4S 3D 3C" };
