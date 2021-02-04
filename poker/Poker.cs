@@ -16,7 +16,7 @@ public static class Poker
 
     public static string ToString(this Hand hand) => String.Join(' ', hand.Select(card => card.ToString()));
 
-    public static IEnumerable<string> BestHands(IEnumerable<string> hands)
+    public static Hands BestHands(Hands hands)
     => (hands.StraightFlush() | hands.Quad() | hands.Fullhouse()
         | hands.Flush() | hands.Straight() | hands.Triplet()
         | hands.TwoPairs() | hands.OnePair() | hands.HighestCard())
