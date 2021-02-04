@@ -184,7 +184,7 @@ public class PokerTests
         Assert.Equal(expected, actual);
     }
 
-    [Fact(Skip = "Remove this Skip property to run this test")]
+    [Fact]
     public void Full_house_beats_a_flush()
     {
         var hands = new[] { "3H 6H 7H 8H 5H", "4S 5H 4C 5D 4H" };
@@ -193,7 +193,7 @@ public class PokerTests
         Assert.Equal(expected, actual);
     }
 
-    [Fact(Skip = "Remove this Skip property to run this test")]
+    [Fact]
     public void Both_hands_have_a_full_house_tie_goes_to_highest_ranked_triplet()
     {
         var hands = new[] { "4H 4S 4D 9S 9D", "5H 5S 5D 8S 8D" };
@@ -202,7 +202,7 @@ public class PokerTests
         Assert.Equal(expected, actual);
     }
 
-    [Fact(Skip = "Remove this Skip property to run this test")]
+    [Fact]
     public void With_multiple_decks_both_hands_have_a_full_house_with_the_same_triplet_tie_goes_to_the_pair()
     {
         var hands = new[] { "5H 5S 5D 9S 9D", "5H 5S 5D 8S 8D" };

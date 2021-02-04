@@ -9,15 +9,18 @@ public static class Poker
 {
     public static Hand ToHand(this string hand) => hand.Split().Select(Card.Create);
 
+    public static string ToString(this Hand hand) => String.Join( ' ', hand.Select( card => card.ToString()));
 
     public static IEnumerable<string> BestHands(IEnumerable<string> hands)
     {
-        if (hands.TryFlush(out var flush)) {
+        if (hands.TryFullhouse(out var fullhouse)) {
+            return fullhouse;
+        } else if (hands.TryFlush(out var flush)) {
             return flush;
         } else if (hands.TryStraight(out var straight)) {
             return straight;
-        } else if (hands.TryThreeOfAKind(out var threeOfaKind)) {
-            return threeOfaKind;
+        } else if (hands.TryTriplet(out var triplet)) {
+            return triplet;
         } else if (hands.TryTwoPairs(out var twoPairs)) {
             return twoPairs;
         } else if (hands.TryOnePair(out var onePair)) {
@@ -26,14 +29,6 @@ public static class Poker
 
         return hands.HighestCard();
     }
-
-
-
-    public static string ToString(this Hand hand) => String.Join( ' ', hand.Select( card => card.ToString()));
-
-    public static Card HighestCard(this Hand hand) => hand.OrderBy(c => c.Rank ).First();
-
-
 
     public static (Hand sameRank, Hand kickers, string origin) Split(this string hand, int count = 2) 
     {
@@ -48,10 +43,13 @@ public static class Poker
     public static bool HasPoorAce(this Hand hand) {
         var ranks = hand.Select( c => c.Rank).OrderBy( r => r);
         return ranks.First() == Rank.Ace && ranks.Last() == Rank.Two;
-    } 
+    }
 
     public static bool IsFlush(this Hand hand) 
         => hand.Select( card => card.Suit).Distinct().Count() == 1; 
+
+    public static bool IsFullhouse(this Hand hand) 
+        => hand.GroupBy( card => card.Rank).Count() == 2; 
 
     public static bool IsStraight(this Hand hand) {
         var x  = hand.Select( card => card.Rank).OrderBy( rank => rank).Distinct(); 
@@ -80,6 +78,29 @@ public static class Poker
         .OrderBy( suit => suit)
         .FirstOrDefault();
 
+    public static bool TryFullhouse(this IEnumerable<string> hands, out IEnumerable<string> result) {
+
+        result = Enumerable.Empty<string>();
+
+        var matches = hands
+            .Where( hand => hand.ToHand().IsFullhouse())
+            .Select( hand => hand.Split(3));
+
+        if (matches.Any())
+        {
+            result = matches
+                .GroupBy( match => match.sameRank, HandComparer.Default)
+                .OrderBy( grp => grp.Key, HandComparer.Default).First()
+                .GroupBy( match => match.kickers, HandComparer.Default)
+                .OrderBy( grp => grp.Key, HandComparer.Default).First()
+                .Select( match => match.origin)
+                .ToArray();
+
+            return true; 
+        } 
+
+        return false;
+    }
     public static bool TryFlush(this IEnumerable<string> hands, out IEnumerable<string> result) {
 
         result = Enumerable.Empty<string>();
@@ -119,7 +140,7 @@ public static class Poker
         return false;
     }
 
-    public static bool TryThreeOfAKind(this IEnumerable<string> hands, out IEnumerable<string> result) {
+    public static bool TryTriplet(this IEnumerable<string> hands, out IEnumerable<string> result) {
 
         result = Enumerable.Empty<string>();
 
