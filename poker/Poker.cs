@@ -12,9 +12,9 @@ using Hands = System.Collections.Generic.IEnumerable<string>;
 
 public static class Poker
 {
-    public static Hand ToHand(this string hand) => hand.Split().Select(Card.Create);
+    private static Hand ToHand(this string hand) => hand.Split().Select(Card.Create);
 
-    public static string ToString(this Hand hand) => String.Join(' ', hand.Select(card => card.ToString()));
+    private static string ToString(this Hand hand) => String.Join(' ', hand.Select(card => card.ToString()));
 
     public static Hands BestHands(Hands hands)
     => hands.StraightFlush() 
@@ -28,7 +28,7 @@ public static class Poker
         | hands.HighestCard() 
         | Enumerable.Empty<string>();
 
-    public static (Hand sameRank, Hand kickers, string origin) Separate(this string hand, int count = 1)
+    private static (Hand sameRank, Hand kickers, string origin) Separate(this string hand, byte count)
     {
         //  "4S 2H 6S 2D JH" -> "2H 2D" sameRank, "4S 6S JH" kickers  origin = .. 
         var x = hand.ToHand().GroupBy(card => card.Rank);
@@ -38,118 +38,121 @@ public static class Poker
             origin: hand);
     }
 
-   
+    private static (Hand sameRank, Hand kickers, string origin) Separate(this string hand)
+        => Separate(hand, 1);
+    private static (Hand sameRank, Hand kickers, string origin) SeparatePair(this string hand)
+        => Separate(hand, 2);
+    private static (Hand sameRank, Hand kickers, string origin) SeparateTriplet(this string hand)
+        => Separate(hand, 3);
+    private static (Hand sameRank, Hand kickers, string origin) SeparateQuad(this string hand)
+        => Separate(hand, 4);
 
-    public static bool IsStraightFlush(this string hand) => hand.ToHand().IsStraightFlush();
+    #region Predicates
 
+    private static bool IsStraightFlush(this string hand)
+        => hand.ToHand().IsStraightFlush();
 
-    public static bool IsStraightFlush(this Hand hand)
+    private static bool IsStraightFlush(this Hand hand)
         => hand.IsStraight() && hand.IsFlush();
 
+    private static bool IsFlush(this string hand) => hand.ToHand().IsFlush();
 
-    public static bool IsFlush(this string hand) => hand.ToHand().IsFlush();
-
-    public static bool IsFlush(this Hand hand)
+    private static bool IsFlush(this Hand hand)
         => hand.Select(card => card.Suit).Distinct().Count() == 1;
 
-    public static bool IsFullhouse(this string hand) => hand.ToHand().IsFullhouse();
+    private static bool IsFullhouse(this string hand) => hand.ToHand().IsFullhouse();
 
-    public static bool IsFullhouse(this Hand hand)
+    private static bool IsFullhouse(this Hand hand)
         => hand.GroupBy(card => card.Rank).Count() == 2 && (hand.IsTriplet());
 
-    public static bool IsTwoPairs(this string hand) => hand.ToHand().IsTwoPairs();
-    public static bool IsTwoPairs(this Hand hand)
-        => hand.GroupBy(card => card.Rank).Count() == 3 && (hand.GroupBy(card => card.Rank).Any(grp => grp.Count() == 1));
+    private static bool IsTwoPairs(this string hand)
+        => hand.ToHand().IsTwoPairs();
+    private static bool IsTwoPairs(this Hand hand)
+        => hand.GroupBy(card => card.Rank).Count() == 3 
+            && (hand.GroupBy(card => card.Rank).Any(grp => grp.Count() == 1));
 
-    public static bool IsOnePair(this string hand) => hand.ToHand().IsOnePair();
-    public static bool IsOnePair(this Hand hand)
-        => hand.GroupBy(card => card.Rank).Count() == 4 && (hand.GroupBy(card => card.Rank).Any(grp => grp.Count() == 2));
+    private static bool IsOnePair(this string hand)
+        => hand.ToHand().IsOnePair();
+    private static bool IsOnePair(this Hand hand)
+        => hand.GroupBy(card => card.Rank).Count() == 4 
+            && (hand.GroupBy(card => card.Rank).Any(grp => grp.Count() == 2));
 
-    public static bool IsQuad(this string hand) => hand.ToHand().IsQuad();
-    public static bool IsQuad(this Hand hand)
+    private static bool IsQuad(this string hand) 
+        => hand.ToHand().IsQuad();
+    private static bool IsQuad(this Hand hand)
         => hand.GroupBy(card => card.Rank).Any(grp => grp.Count() == 4);
 
-    public static bool IsTriplet(this string hand) => hand.ToHand().IsTriplet();
-    public static bool IsTriplet(this Hand hand)
+    private static bool IsTriplet(this string hand)
+        => hand.ToHand().IsTriplet();
+    private static bool IsTriplet(this Hand hand)
         => hand.GroupBy(card => card.Rank).Any(grp => grp.Count() == 3);
 
-    public static bool IsStraight(this string hand) => hand.ToHand().IsStraight();
+    private static bool IsStraight(this string hand) => hand.ToHand().IsStraight();
 
-    public static bool IsStraight(this Hand hand)
+    private static bool IsStraight(this Hand hand)
     {
         var x = hand.Select(card => card.Rank).OrderBy(rank => rank).Distinct();
-        return x.Count() != 5 ?
-            false
-            :
-            x.Last() - x.First() == 4 ?
-                true
-                :
-                hand.HasPoorAce() ?
-                    x.Last() - x.Skip(1).First() == 3 ?
-                        true
-                        :
-                        false
-                    :
-                    false;
+        return 
+            x.Count() == 5 
+            && x.Last() - x.First() == 4
+            || hand.HasPoorAce() && x.Last() - x.Skip(1).First() == 3;
     }
+    #endregion
 
-    public static Option<Hands> StraightFlush(this Hands hands)
+    private static Option<Hands> StraightFlush(this Hands hands)
     => hands
         .Where(IsStraightFlush)
-        .Select(hand => hand.Separate())
+        .Select(Separate)
         .GetResult(HandComparer.Straight);
 
-    public static Option<Hands> Quad(this Hands hands)
+    private static Option<Hands> Quad(this Hands hands)
     => hands
         .Where(hand => hand.ToHand().IsQuad())
-        .Select(hand => hand.Separate(4))
+        .Select(SeparateQuad)
         .GetResult(HandComparer.Default);
 
-    public static Option<Hands> Fullhouse(this Hands hands)
+    private static Option<Hands> Fullhouse(this Hands hands)
     => hands
         .Where(IsFullhouse)
-        .Select(hand => hand.Separate(3))
+        .Select(SeparateTriplet)
         .GetResult(HandComparer.Default);
 
-    public static Option<Hands> Flush(this Hands hands)
+    private static Option<Hands> Flush(this Hands hands)
     => hands
         .Where(IsFlush)
-        .Select(hand => hand.Separate())
+        .Select(Separate)
         .GetResult(HandComparer.Default);
 
-    public static Option<Hands> Straight(this Hands hands)
+    private static Option<Hands> Straight(this Hands hands)
     => hands
         .Where(IsStraight)
-        .Select(hand => hand.Separate())
+        .Select(Separate)
         .GetResult(HandComparer.Straight);
 
-
-    public static Option<Hands> Triplet(this Hands hands) 
+    private static Option<Hands> Triplet(this Hands hands) 
     => hands
         .Where(IsTriplet)
-        .Select(hand => hand.Separate(3))
+        .Select(SeparateTriplet)
         .GetResult(HandComparer.Default);
 
 
-    public static Option<Hands> TwoPairs(this Hands hands)
+    private static Option<Hands> TwoPairs(this Hands hands)
     => hands
         .Where(IsTwoPairs)
-        .Select(hand => hand.Separate(2))
+        .Select(SeparatePair)
         .GetResult(HandComparer.Default);
     
-    public static Option<Hands> OnePair(this Hands hands)
+    private static Option<Hands> OnePair(this Hands hands)
     => hands
         .Where(IsOnePair)
-        .Select(hand => hand.Separate(2))
+        .Select(SeparatePair)
         .GetResult(HandComparer.Default);
     
 
-    public static Option<Hands> HighestCard(this Hands hands)
-    => Some<Hands>(hands
-        .GroupBy(hand => hand.ToHand(), HandComparer.Default)
-        .OrderBy(grp => grp.Key, HandComparer.Default)
-        .First()
-        .ToArray());
+    private static Option<Hands> HighestCard(this Hands hands)
+    => hands
+        .Select(Separate)
+        .GetResult(HandComparer.Default);
 
     private static Option<Hands> GetResult(this IEnumerable<(Hand sameRank, Hand kickers, string origin)> matches, HandComparer comparer)
     => matches.Any() ? Some<Hands>(matches
