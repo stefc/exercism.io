@@ -57,6 +57,9 @@ namespace Domain.Functors
         public static Option<T> operator | (Option<T> left, Option<T> right)
             => left.Or(right);
 
+        public static T operator | (Option<T> left, T right)
+            => left.GetOrElse(right);
+
         public override string ToString()
             => isSome ? $"{nameof(Option.Some<T>)}({value})" : nameof(Option.None);
 
