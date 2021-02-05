@@ -12,6 +12,8 @@ using Hands = System.Collections.Generic.IEnumerable<string>;
 
 public static class Poker
 {
+    private record Separation (Hand SameRank, Hand Kickers, string Origin);
+
     private static Hand ToHand(this string hand) => hand.Split().Select(Card.Create);
 
     private static string ToString(this Hand hand) => String.Join(' ', hand.Select(card => card.ToString()));
@@ -28,23 +30,24 @@ public static class Poker
         | hands.HighestCard() 
         | Enumerable.Empty<string>();
 
-    private static (Hand sameRank, Hand kickers, string origin) Separate(this string hand, byte count)
+    
+    private static Separation Separate(this string hand, byte count)
     {
         //  "4S 2H 6S 2D JH" -> "2H 2D" sameRank, "4S 6S JH" kickers  origin = .. 
         var x = hand.ToHand().GroupBy(card => card.Rank);
-        return (
-            sameRank: x.Where(grp => grp.Count() == count).SelectMany(grp => grp).ToArray(),
-            kickers: x.Where(grp => grp.Count() != count).SelectMany(grp => grp).ToArray(),
-            origin: hand);
+        return new (
+            x.Where(grp => grp.Count() == count).SelectMany(grp => grp).ToArray(),
+            x.Where(grp => grp.Count() != count).SelectMany(grp => grp).ToArray(),
+            hand);
     }
 
-    private static (Hand sameRank, Hand kickers, string origin) Separate(this string hand)
+    private static Separation Separate(this string hand)
         => Separate(hand, 1);
-    private static (Hand sameRank, Hand kickers, string origin) SeparatePair(this string hand)
+    private static Separation SeparatePair(this string hand)
         => Separate(hand, 2);
-    private static (Hand sameRank, Hand kickers, string origin) SeparateTriplet(this string hand)
+    private static Separation SeparateTriplet(this string hand)
         => Separate(hand, 3);
-    private static (Hand sameRank, Hand kickers, string origin) SeparateQuad(this string hand)
+    private static Separation SeparateQuad(this string hand)
         => Separate(hand, 4);
 
     #region Predicates
@@ -154,13 +157,13 @@ public static class Poker
         .Select(Separate)
         .GetResult(HandComparer.Default);
 
-    private static Option<Hands> GetResult(this IEnumerable<(Hand sameRank, Hand kickers, string origin)> matches, HandComparer comparer)
+    private static Option<Hands> GetResult(this IEnumerable<Separation> matches, HandComparer comparer)
     => matches.Any() ? Some<Hands>(matches
-            .GroupBy(match => match.sameRank, comparer)
+            .GroupBy(match => match.SameRank, comparer)
             .OrderBy(grp => grp.Key, comparer).FirstOrDefault()
-            .GroupBy(match => match.kickers, comparer)
+            .GroupBy(match => match.Kickers, comparer)
             .OrderBy(grp => grp.Key, comparer).FirstOrDefault()
-            .Select(match => match.origin)
+            .Select(match => match.Origin)
             .ToArray())
             : None;
 
