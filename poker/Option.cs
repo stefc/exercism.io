@@ -134,6 +134,8 @@ namespace Domain.Functors
                    () => false,
                    (_) => true);
 
+                   
+
         public static T GetOrElse<T>(this Option<T> opt, T defaultValue)
         => opt.Match(
             () => defaultValue,
@@ -146,7 +148,6 @@ namespace Domain.Functors
 
         public static Option<A> Or<A>(this Option<A> left, Option<A> right)
             => left.IsSome() ? left : right;
-
 
         // LINQ
 
