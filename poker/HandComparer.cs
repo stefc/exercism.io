@@ -5,6 +5,8 @@ using System.Linq;
 
 using Hand = System.Collections.Generic.IEnumerable<Card>;
 
+using OrderRanks = System.Func<System.Collections.Generic.IEnumerable<Card>,System.Collections.Generic.IEnumerable<Rank>>;
+
 public static class HigherOrderFunctions {
     public static Func<TInput1, TOutput> If<TInput1, TOutput>(this Func<TInput1, TOutput> f, 
         Func<TInput1,bool> predicate, Func<TOutput,TOutput> iif) 
@@ -13,22 +15,22 @@ public static class HigherOrderFunctions {
 
 public class HandComparer : IComparer<Hand>, IEqualityComparer<Hand>
 {
-    private readonly Func<Hand,IEnumerable<Rank>> rankOrdering;
-    private static readonly Lazy<HandComparer> @default = new Lazy<HandComparer>(() => new HandComparer(DefaultRankOrder), true);
-    private static readonly Lazy<HandComparer> straight = new Lazy<HandComparer>(() => new HandComparer(StraightRankOrder), true);
+    private readonly OrderRanks rankOrdering;
+    private static readonly Lazy<HandComparer> @default = 
+        new Lazy<HandComparer>(() => new HandComparer(DefaultRankOrder), true);
+    private static readonly Lazy<HandComparer> straight =
+        new Lazy<HandComparer>(() => new HandComparer(StraightRankOrder), true);
 
-    public HandComparer(Func<Hand,IEnumerable<Rank>> rankOrdering)
+    public HandComparer(OrderRanks rankOrdering)
     {
         this.rankOrdering = rankOrdering;
     }
 
-    private static Func<Hand,IEnumerable<Rank>> DefaultRankOrder 
+    private static OrderRanks DefaultRankOrder 
     => x => x.Select(c => c.Rank).OrderBy(r => r);
 
-    private static Func<Hand,IEnumerable<Rank>> StraightRankOrder
+    private static OrderRanks StraightRankOrder
     => DefaultRankOrder.If(hand => hand.HasPoorAce(), ranks => ranks.Skip(1).Append(Rank.PoorAce));
-    
-    
 
     public int Compare(Hand x, Hand y)
         // 4D 5S 6S 8D 3C", x =  8D 6S 5S 4D 3C

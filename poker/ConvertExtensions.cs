@@ -11,8 +11,6 @@ public static partial class Poker
 
     private record Separation (Hand SameRank, Hand Kickers, Hand Origin);
 
-    
-
     private static Separation Separate(this Hand hand, byte count)
     {
         //  "4S 2H 6S 2D JH" -> "2H 2D" sameRank, "4S 6S JH" kickers  origin = .. 
