@@ -5,6 +5,12 @@ using System.Linq;
 
 using Hand = System.Collections.Generic.IEnumerable<Card>;
 
+public static class HigherOrderFunctions {
+    public static Func<TInput1, TOutput> If<TInput1, TOutput>(this Func<TInput1, TOutput> f, 
+        Func<TInput1,bool> predicate, Func<TOutput,TOutput> iif) 
+    => x => predicate(x) ? iif(f(x)) : f(x);
+}
+
 public class HandComparer : IComparer<Hand>, IEqualityComparer<Hand>
 {
     private readonly Func<Hand,IEnumerable<Rank>> rankOrdering;
@@ -16,11 +22,13 @@ public class HandComparer : IComparer<Hand>, IEqualityComparer<Hand>
         this.rankOrdering = rankOrdering;
     }
 
-    private static IEnumerable<Rank> DefaultRankOrder(Hand hand) 
-    => hand.Select(c => c.Rank).OrderBy(r => r);
+    private static Func<Hand,IEnumerable<Rank>> DefaultRankOrder 
+    => x => x.Select(c => c.Rank).OrderBy(r => r);
 
-    private static IEnumerable<Rank> StraightRankOrder(Hand hand)
-    => hand.HasPoorAce() ? DefaultRankOrder(hand).Skip(1).Append(Rank.PoorAce) : DefaultRankOrder(hand);
+    private static Func<Hand,IEnumerable<Rank>> StraightRankOrder
+    => DefaultRankOrder.If(hand => hand.HasPoorAce(), ranks => ranks.Skip(1).Append(Rank.PoorAce));
+    
+    
 
     public int Compare(Hand x, Hand y)
         // 4D 5S 6S 8D 3C", x =  8D 6S 5S 4D 3C
@@ -29,10 +37,10 @@ public class HandComparer : IComparer<Hand>, IEqualityComparer<Hand>
 
     => rankOrdering(x)
         .Zip(rankOrdering(y), (leftRank, rightRank) => leftRank.CompareTo(rightRank))
-        .FirstOrDefault(cmp => cmp != 0);
+        .FirstOrDefault(cmp => cmp is not 0);
     
 
-    public bool Equals(Hand x, Hand y) => this.Compare(x, y) == 0;
+    public bool Equals(Hand x, Hand y) => this.Compare(x, y) is 0;
 
     public int GetHashCode([DisallowNull] Hand hand) => hand
         .OrderBy(c => c.Rank)
