@@ -1,16 +1,20 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-using Domain.Functors;
-
 // 1. Type Aliasing mit 'using'
-using Hands = System.Collections.Generic.IEnumerable<string>;
+using Hand = System.Collections.Generic.IEnumerable<Card>;
+using Hands = System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<Card>>;
 
-using static Domain.Functors.F;
+using static F;
 
 public static partial class Poker
 {
-    public static Hands BestHands(Hands hands)
+    public static IEnumerable<string> BestHands(IEnumerable<string> hands) 
+    => hands.Select(ToHand)
+        .GetWinnerHands()
+        .Select(ToString);
+
+    private static IEnumerable<Hand> GetWinnerHands(this Hands hands)
     => hands.StraightFlush() 
         | hands.Quad() 
         | hands.Fullhouse()
@@ -20,7 +24,7 @@ public static partial class Poker
         | hands.TwoPairs() 
         | hands.OnePair() 
         | hands.HighestCard() 
-        | Enumerable.Empty<string>();
+        | Enumerable.Empty<Hand>();
 
     private static Option<Hands> StraightFlush(this Hands hands)
     => hands
