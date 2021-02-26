@@ -21,7 +21,7 @@ public class HandComparer : IComparer<Hand>, IEqualityComparer<Hand>
     private static readonly Lazy<HandComparer> straight =
         new Lazy<HandComparer>(() => new HandComparer(StraightRankOrder), true);
 
-    public HandComparer(OrderRanks rankOrdering)
+    private HandComparer(OrderRanks rankOrdering)
     {
         this.rankOrdering = rankOrdering;
     }

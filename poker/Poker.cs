@@ -14,7 +14,7 @@ public static partial class Poker
         .GetWinnerHands()
         .Select(ToString);
 
-    private static IEnumerable<Hand> GetWinnerHands(this Hands hands)
+    private static Hands GetWinnerHands(this Hands hands)
     => hands.StraightFlush() 
         | hands.Quad() 
         | hands.Fullhouse()
