@@ -49,10 +49,10 @@ public struct Option<T>: IEquatable<Option.None>, IEquatable<Option<T>>
     public static bool operator !=(Option<T> @this, Option<T> other)
         => !(@this == other);
 
-    public static Option<T> operator |(Option<T> left, Option<T> right)
-        => left.Or(right);
+    public static Option<T> operator ^(Option<T> left, Option<T> right)
+        => left.Xor(right);
 
-    public static T operator |(Option<T> left, T right)
+    public static T operator ^(Option<T> left, T right)
         => left.GetOrElse(right);
 
     public override string ToString()
@@ -136,7 +136,7 @@ public static class OptionExt
             () => fallback(),
             (t) => t);
 
-    public static Option<A> Or<A>(this Option<A> left, Option<A> right)
+    public static Option<A> Xor<A>(this Option<A> left, Option<A> right)
         => left.IsSome() ? left : right;
 
     // LINQ

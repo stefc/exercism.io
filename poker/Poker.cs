@@ -16,15 +16,15 @@ public static partial class Poker
 
     private static Hands GetWinnerHands(this Hands hands)
     => hands.StraightFlush() 
-        | hands.Quad() 
-        | hands.Fullhouse()
-        | hands.Flush() 
-        | hands.Straight() 
-        | hands.Triplet()
-        | hands.TwoPairs() 
-        | hands.OnePair() 
-        | hands.HighestCard() 
-        | Enumerable.Empty<Hand>();
+        ^ hands.Quad() 
+        ^ hands.Fullhouse()
+        ^ hands.Flush() 
+        ^ hands.Straight() 
+        ^ hands.Triplet()
+        ^ hands.TwoPairs() 
+        ^ hands.OnePair() 
+        ^ hands.HighestCard() 
+        ^ Enumerable.Empty<Hand>();
 
     private static Option<Hands> StraightFlush(this Hands hands)
     => hands
